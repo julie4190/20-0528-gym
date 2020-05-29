@@ -8,6 +8,18 @@ for(var i=0; i<datas.length; i++){
 	html += '</div>';
 	$(".main-wrap").append(html);
 } 
+$(".section").each(function(i){
+	var $obj = $(this);
+	if(i == 0) {
+		$(this).css("top", $(this).prev().outerHeight() + "px");
+	}
+	else {
+		setTimeout(function(){
+			var top = $obj.prev().offset().top + $obj.prev().outerHeight();
+			$obj.css("top", top+"px");
+		}, i * 300);
+	}
+}); 
 */
 
 /************ 전역변수 *************/
@@ -22,8 +34,8 @@ function mainAjax() {
 	$.get("../json/banner.json", function(res){
 		datas = res.banners;
 		mainLast = datas.length - 1;
-		mainInit();
 		mainPager();
+		mainInit();
 	});
 }
 
@@ -32,24 +44,40 @@ function mainInit() {
 	mainNext = (mainNow == mainLast) ? 0 : mainNow + 1;
 	$(".main-wrap").find(".slide").remove();
 	$(htmlMaker(mainNow)).appendTo(".main-wrap").css({
-		"position": "static",
+		"position": "relative",
 		"transition": "transform 0.5s"
 	});
 	$(htmlMaker(mainPrev)).appendTo(".main-wrap").css("top", "-100%");
 	$(htmlMaker(mainNext)).appendTo(".main-wrap").css("top", "100%");
+	$(".main-wrap .pager").removeClass("active");
+	$(".main-wrap .pager").eq(mainNow).addClass("active");
+	setTimeout(function(){
+		$(".main-wrap").find(".slide").eq(0).find(".ani-trans").css("transform", "translateX(0)");
+	}, 300);
 }
-$(".main-wrap . pager").removeClass("active");
-$(".main-wrap . pager").eq("mainNow").addClass()
 
 function htmlMaker(n) {
 	html  = '<div class="slide">';
 	html += '<img src="'+datas[n].src+'" class="img">';
+	html += '<div class="mask"></div>';
+	html += '<div class="slide-content '+datas[n].class+'">';
+	html += '<h2 class="title ani-trans">'+datas[n].title+'<span>.</span></h2>';
+	html += '<h3 class="desc ani-trans">'+datas[n].desc+'</h3>';
+	html += '<div class="bts">';
+	for(var i=0, bt; i<datas[n].buttons.length; i++) {
+		bt = datas[n].buttons[i];
+		html += '<a href="'+bt.link+'" class="'+bt.class+' ani-trans">'+bt.title+'</a>';
+	}
+	html += '</div>';
+	html += '</div>';
 	html += '</div>';
 	return html;
 }
 
 function mainPager() {
-	
+	for(var i=0; i<=mainLast; i++) {
+		$('<span class="pager"></span>').appendTo(".main-wrap .pagers").click(onPagerClick);
+	}
 }
 
 function fixShow(show) {
@@ -71,7 +99,18 @@ function fixShow(show) {
 
 /************ 이벤트콜백 *************/
 function onResize() {
-	$(".main-wrap").css("top", $(".header").outerHeight()+"px");
+	$(".main-wrap").css("margin-top", $(".header").outerHeight() + "px");
+	/*
+	for(var i=0, adHei=0; i<$(".ad-wrap>.ad").length; i++) {
+		adHei = ($(".ad-wrap>.ad").eq(i).outerHeight() > adHei) 
+		? $(".ad-wrap>.ad").eq(i).outerHeight() 
+		: adHei;
+		console.log(adHei);
+	}
+	$(".ad-wrap > .ad").each(function(){
+		$(this).outerHeight(adHei);
+	});
+	*/
 }
 
 function onNaviHover() {
@@ -100,7 +139,6 @@ function onBarClick() {
 function onNaviChildClick() {
 	$(this).next().stop().slideToggle(500);
 	$(this).children("i").toggleClass("active");
-	
 }
 
 function onMainPrev() {
@@ -119,6 +157,31 @@ function onMainNext() {
 	});
 }
 
+function onPagerClick() {
+	var target = [];
+	var old = mainNow;
+	mainNow  = $(this).index();
+	if(mainNow > old) {
+		// console.log("아래거 올라옴");
+		target[0] = "100%";
+		target[1] = "-100px";
+	}
+	else if(mainNow < old) {
+		// console.log("위에거 내려옴");
+		target[0] = "-100%";
+		target[1] = "100px";
+	}
+	else {
+		return false;
+	}
+	$(".main-wrap > .slide").not($(".main-wrap > .slide").eq(0)).remove();
+	$(htmlMaker(mainNow)).appendTo(".main-wrap").css("top", target[0]);
+	$(".main-wrap > .slide").eq(0).css("transform", "translateY("+target[1]+")");
+	$(".main-wrap > .slide").eq(1).stop().animate({"top": 0}, 500, mainInit);
+}
+
+
+
 /************ 이벤트선언 *************/
 $(window).resize(onResize).trigger("resize");
 
@@ -128,3 +191,5 @@ $(".header .navi-child-mo").click(onNaviChildClick);
 
 $(".main-wrap > .bt-prev").click(onMainPrev);
 $(".main-wrap > .bt-next").click(onMainNext);
+
+$(".section").imagesLoaded(onResize);
