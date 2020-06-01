@@ -26,8 +26,12 @@ $(".section").each(function(i){
 var datas;
 var mainNow = 0;
 var mainPrev, mainNext, mainLast;
-mainAjax();
 
+
+/************ Initialize *************/
+mainAjax();
+emailjs.init('user_TROFqVnbPGZyygPAci7nt');
+$('#background').YTPlayer();
 
 /************ 사용자함수 *************/
 function mainAjax() {
@@ -100,6 +104,8 @@ function fixShow(show) {
 /************ 이벤트콜백 *************/
 function onResize() {
 	$(".main-wrap").css("margin-top", $(".header").outerHeight() + "px");
+	var classHei = $(".class-wrap .item").eq(0).outerWidth() * 0.75;
+	$(".class-wrap .item").outerHeight(classHei);
 	/*
 	for(var i=0, adHei=0; i<$(".ad-wrap>.ad").length; i++) {
 		adHei = ($(".ad-wrap>.ad").eq(i).outerHeight() > adHei) 
@@ -111,6 +117,19 @@ function onResize() {
 		$(this).outerHeight(adHei);
 	});
 	*/
+}
+
+function onScroll() {
+	var scTop = $(this).scrollTop();
+	var sum = scTop + $(this).innerHeight() - 200;
+
+	$(".ani").each(function(){
+		if(sum > $(this).offset().top) {
+			if($(this).hasClass("pers")) $(this).parent().css("perspective", "400px");
+			
+			$(this).css("animation-play-state", "running");
+		}
+	});
 }
 
 function onNaviHover() {
@@ -180,10 +199,25 @@ function onPagerClick() {
 	$(".main-wrap > .slide").eq(1).stop().animate({"top": 0}, 500, mainInit);
 }
 
+function onMasonry(){
+	$masonry.masonry({
+		itemSelector: '.class',
+		columnWidth: '.class-sizer',
+		percentPosition: true
+	});
+}
 
+function onContact(event) {
+	event.preventDefault();
+	this.contact_number.value = Math.random() * 100000 | 0;
+	emailjs.sendForm('gmail', 'gym-temp', this);
+	alert("Subscribe 신청이 완료되었습니다.");
+	this.reset();
+}
 
 /************ 이벤트선언 *************/
 $(window).resize(onResize).trigger("resize");
+$(window).scroll(onScroll).trigger("scroll");
 
 $(".header .navi-child").hover(onNaviHover, onNaviLeave);
 $(".header .navi-bars").click(onBarClick);
@@ -192,4 +226,8 @@ $(".header .navi-child-mo").click(onNaviChildClick);
 $(".main-wrap > .bt-prev").click(onMainPrev);
 $(".main-wrap > .bt-next").click(onMainNext);
 
-$(".section").imagesLoaded(onResize);
+$("section").imagesLoaded(onResize);
+
+var $masonry = $(".classes").imagesLoaded(onMasonry);
+
+$('#contactForm').submit(onContact);
